@@ -18,7 +18,10 @@ A human approves everything before it goes out.
 | `agent/system-prompt.md` | The agent's instructions |
 | `templates/` | Client email, policy record, renewal register |
 | `knowledge/wordings/` | Key points per insurer wording |
-| `docs/automation-plan.md` | Phase 1 (Claude Project), Phase 2 (Outlook + Power Automate), Phase 3 (renewals) |
+| `agent/api-output-format.md` | JSON output contract for the automated flow |
+| `docs/automation-plan.md` | Phase 1 (Claude Project), Phase 2 (Outlook + OneDrive + Make + Claude API), Phase 3 (renewals) |
+| `docs/onedrive-setup.md` | Folder structure and Excel tables |
+| `docs/popia-clause.md` | Mandate clause, privacy notice line, client notice email, go-live checklist |
 
 **Products live:** Contractors All Risk (Elevation / Bryte).
 **Next:** performance guarantees, liability, EVsure. Each gets its own template and wording notes as policies come in.
