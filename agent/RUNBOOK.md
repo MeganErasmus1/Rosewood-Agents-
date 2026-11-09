@@ -1,6 +1,6 @@
 # Policy Summary Agent: Scheduled Run Runbook
 
-This is what every scheduled run does. It uses the Microsoft 365 connector (MDM account, Megan@mdmrisks.com). **Do not send any email. Do not edit, move, rename or delete any existing client file.** The only writes allowed are: Outlook **drafts**, new summary `.docx` files, and files inside the agent's own state folder.
+This is what every scheduled run does. It uses the Microsoft 365 connector (MDM account, Megan@mdmrisks.com). **Do not send any email. Do not edit, move, rename or delete any existing client file.** The only writes allowed are: Outlook **drafts**, new POLICY SUMMARY and BROKER CHECK `.docx` files, and files inside the agent's own state folder.
 
 ## Fixed locations (OneDrive, MDM)
 
@@ -31,26 +31,32 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
 4. **For each new schedule** (maximum 5 per run, oldest first):
    - a. Read the PDF with `read_resource` (all pages).
    - b. Find the matching wording. Look in the same folder for a file with "wording" or the insurer's name in it, then fall back to `knowledge/wordings/`. If neither exists, say "wording not reviewed" in the broker check.
-   - c. Look up the client's row in `CLIENT DATABASE ORGANISED.xlsx` by policy number, and check it for conflicts with the schedule (status, dates, insurer).
+   - c. Look up the client's row in `CLIENT DATABASE ORGANISED.xlsx` by policy number, and check it for conflicts with the schedule (status, dates, insurer). This file is **read only**: never write to it.
    - d. List the sibling folders of the client folder, such as `THEFT CLAIM`. An open claim folder must appear as a flag in the broker check, because it's relevant to warranties.
    - e. Follow `agent/system-prompt.md` exactly to produce the **broker check**, the **client email** and **Part A of the policy record**. Today's date is from step 1.
-   - f. **Build the summary document.** Write the policy record (broker check + Part A + client email as sent + blank Part B) to a local `.md` file. Run `python3 agent/md_to_docx.py in.md out.docx`, then upload it with `sharepoint_upload_file` (contentBase64, `expectedBytes` = the printed size) into the **same folder as the schedule**. Name it `POLICY SUMMARY - {policy no} - {YYYY-MM-DD}.docx` and use `conflictBehavior: rename`.
-     The base64 must be copied exactly. If the upload is refused for a size mismatch, rebuild and retry once, then fall back to uploading the same content as `.html` (from `agent/md_to_html.py`) via `content`.
-   - g. **Create one Outlook draft** (`outlook_create_draft`, bodyType html, no recipients). Build the body with `python3 agent/md_to_html.py draft.md`, which outputs only tags the Outlook allowlist accepts. End every draft with: "Policy summary saved to the client folder in OneDrive. Add this policy to CLIENT DATABASE ORGANISED.xlsx if it is not there yet."
-     - If the status is READY or SEND AFTER QUERIES:
-       - Subject: `[READY] {Client} {Policy no}: copy to Rosewood mail` or `[QUERIES] ...`
-       - Body: a short broker-check box at the top, a line `===== COPY FROM HERE INTO ROSEWOOD EMAIL =====`, then the client email.
-     - If the status is HOLD:
-       - Subject: `[HOLD] {Client} {Policy no}: escalate to Megan`
-       - Body: the broker check only, with no client email.
-   - h. Append the entry to `processed.json`.
+   - f. **Build TWO Word documents** with `python3 agent/md_to_docx.py in.md out.docx "<subtitle>"` and upload each with `sharepoint_upload_file` (contentBase64, `expectedBytes` = the printed size) into the **same folder as the schedule**:
+     - `POLICY SUMMARY - {policy no} - {YYYY-MM-DD}.docx` (subtitle "Policy Summary"). This is client-facing: the client email content, then a **POLICY DOCUMENTS** section that links to the schedule PDF and the wording PDF in OneDrive, in Markdown link format `[file name](https://mdmrisk-my.sharepoint.com/personal/megan_mdmrisks_com/Documents/<url-encoded path>)`. **No flags in this document.**
+     - `BROKER CHECK - {policy no} - {YYYY-MM-DD}.docx` (subtitle "Broker Check and Record of Advice (internal)"). This is internal: the status line, the flag table (RED/AMBER/GREEN with sources), the wording check, Part A policy details, the same document links, and a blank Part B record of advice plus approval table.
+     - Use `conflictBehavior: rename`. The base64 must be copied exactly. If an upload is refused for a size mismatch, rebuild and retry once.
+   - g. **Create ONE Outlook draft** (`outlook_create_draft`, bodyType html, no recipients) containing **only the client email**: no flags, no broker check, no internal notes.
+     - Subject: the client email subject, e.g. `Your Contractors All Risk cover: summary of policy {policy no}`.
+     - Body: `python3 agent/md_to_html.py email.md` (outputs only tags the Outlook allowlist accepts).
+     - **Always draft the email, whatever the flags.** RED and AMBER issues live in the broker check document only. Megan or the admin reads that before sending.
+   - h. Append the entry to `processed.json` (itemId, name, processed_on, status, summary_itemId, broker_check_itemId, draft_id).
 
 5. **Save state.** Upload `processed.json` with `conflictBehavior: replace`. This is the only file the agent may ever replace.
 
-6. **Report.**
+6. **Report (this is how Megan and the admin know a draft is ready).**
    - If anything was processed, finish with a short summary: client, policy, status and the key flag, one line each.
    - If nothing new was found, finish with "No new schedules" and do nothing else.
    - **Never send email, never contact clients or insurers.**
+
+## Standing rules from Megan (do not change)
+- **Never send, forward or delete email.** Only create drafts. Megan or the admin copies each draft into Rosewood mail and sends it themselves.
+- Drafts contain the **client email only**. Flags go in the separate BROKER CHECK document in the client's folder.
+- Draft the email **regardless of flags**. Many conditions are standard CAR wording.
+- The admin saves new schedules and wordings into the client's folder in CLIENT DATABASE. That's the only trigger the agent needs.
+- Never write to `CLIENT DATABASE ORGANISED.xlsx` or anything in `_renewals-agent/`.
 
 ## Rules
 - Follow every accuracy rule in `agent/system-prompt.md`, especially the rule against invented figures.

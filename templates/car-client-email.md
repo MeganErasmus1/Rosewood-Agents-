@@ -1,6 +1,6 @@
 # Template: CAR Client Email
 
-Sections in **bold caps** are fixed. Keep the order. Leave out a section only if it truly has no content.
+Sections in **bold caps** are fixed. Keep the order. Leave out a section only if it truly has no content. This email goes into the Outlook draft ON ITS OWN: never add flags or internal notes to it.
 
 ---
 

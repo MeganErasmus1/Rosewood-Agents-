@@ -1,6 +1,6 @@
 """Convert a simple Markdown policy summary into a compact Rosewood-styled .docx.
 
-Usage: python3 agent/md_to_docx.py input.md output.docx
+Usage: python3 agent/md_to_docx.py input.md output.docx [subtitle]
 Prints the output size in bytes (pass it as expectedBytes when uploading).
 
 Builds a minimal WordprocessingML package by hand (no template), so the file
@@ -38,8 +38,27 @@ def run(text, bold=False, italic=False, size=20, color=DARK):
     return f'<w:r><w:rPr>{props}</w:rPr><w:t xml:space="preserve">{escape(text)}</w:t></w:r>'
 
 
+LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)")
+SUBTITLE = "Policy Summary"
+LINKS = []  # hyperlink targets collected while building the document
+
+
+def link(text, url, size=20):
+    LINKS.append(url)
+    rid = f"rIdL{len(LINKS)}"
+    props = f'<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:color w:val="0563C1"/><w:u w:val="single"/><w:sz w:val="{size}"/>'
+    return f'<w:hyperlink r:id="{rid}"><w:r><w:rPr>{props}</w:rPr><w:t xml:space="preserve">{escape(text)}</w:t></w:r></w:hyperlink>'
+
+
 def runs(text, size=20, color=DARK, bold=False):
     out = []
+    pieces = LINK.split(text)
+    if len(pieces) > 1:
+        for k in range(0, len(pieces), 3):
+            out.append(runs(pieces[k], size, color, bold) if pieces[k] else "")
+            if k + 2 < len(pieces):
+                out.append(link(pieces[k + 1], pieces[k + 2], size))
+        return "".join(out)
     for part in INLINE.split(text):
         if not part:
             continue
@@ -86,7 +105,7 @@ def table(rows):
 
 def body_xml(md_text):
     out = [para(run("ROSEWOOD INSURANCE BROKERS", True, size=32), after=0),
-           para(run("FSP 50431  |  Policy Summary Record", size=18, color=ORANGE), after=200)]
+           para(run(f"FSP 50431  |  {SUBTITLE}", size=18, color=ORANGE), after=200)]
     lines = md_text.splitlines()
     i, num = 0, 0
     while i < len(lines):
@@ -122,7 +141,7 @@ def body_xml(md_text):
     out.append(para(run("Prepared with AI assistance. Checked and approved by a Rosewood representative before use.", italic=True, size=14, color=GREY), before=240))
     sect = '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>'
     return ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
+            '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>'
             + "".join(out) + sect + "</w:body></w:document>")
 
 
@@ -130,10 +149,19 @@ def convert(md_text, out_path):
     with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         z.writestr("[Content_Types].xml", CONTENT_TYPES)
         z.writestr("_rels/.rels", RELS)
+        LINKS.clear()
         z.writestr("word/document.xml", body_xml(md_text))
+        rels = "".join(
+            f'<Relationship Id="rIdL{i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="{escape(u)}" TargetMode="External"/>'
+            for i, u in enumerate(LINKS))
+        z.writestr("word/_rels/document.xml.rels",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + rels + "</Relationships>")
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 3:
+        SUBTITLE = sys.argv[3]
     with open(sys.argv[1], encoding="utf-8") as fh:
         convert(fh.read(), sys.argv[2])
     print(os.path.getsize(sys.argv[2]))
