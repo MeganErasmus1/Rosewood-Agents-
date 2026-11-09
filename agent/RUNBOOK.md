@@ -8,7 +8,7 @@ This is what every scheduled run does. It uses the Microsoft 365 connector (MDM 
 |---|---|
 | driveId | `b!7vzr3uRy1k65KuSVa9BOZFDXW55shcdHi9qqW2LLvkPSVZnnH9wsTJm5WOe1Oaaa` |
 | Client database root | `4. ROSEWOOD INSURANCE BROKERS (PTY) LTD/CLIENT DATABASE` (item `01CO7KXES5JTQ45J5ZNJHKAFOW3F3MKJY5`) |
-| Agent state folder | `CLIENT DATABASE/_policy-summary-agent/` (item `01CO7KXESSBZVZ4D72JJFLKYXIN4GKGAEF`, contains `processed.json`) |
+| Agent state folder | `CLIENT DATABASE/_policy-summary-agent/` (item `01CO7KXESSBZVZ4D72JJFLKYXIN4GKGAEF`, contains `processed.json` and `renewals-handoff.csv`) |
 | Client list (read only) | `CLIENT DATABASE/CLIENT DATABASE ORGANISED.xlsx` |
 | Renewals agent (do not touch) | `CLIENT DATABASE/_renewals-agent/` |
 
@@ -52,11 +52,13 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
        1. One admin line: `Broker check: {READY TO SEND / SEND AFTER QUERIES LOGGED / HOLD: RED FLAGS, Megan to clear before sending}. Full broker check: BROKER CHECK document in the client's AI POLICY SUMMARY folder. Attach the schedule and wording from the client folder when you send.`
        2. A line: `===== COPY FROM HERE INTO A NEW EMAIL TO THE CLIENT =====`
        3. The client email only (`python3 agent/md_to_html.py email.md`), including the IMPORTANT: PLEASE READ YOUR POLICY section. No flag table, no internal notes.
-     - If `outlook_send_draft` fails, leave the draft in Megan's Drafts and say so in the run report.
+     - If `outlook_send_draft` isn't available or fails, send the same subject and body with `outlook_send_mail` to `admin@rosewoodib.co.za` only, and leave the draft in Drafts as the record.
      - The connector can't attach the schedule or wording PDFs, so the admin attaches them from the client folder.
    - h. Append the entry to `processed.json` (itemId, name, processed_on, status, summary_itemId, broker_check_itemId, draft_id).
+   - i. **Hand the policy to the renewals agent.** Add one row to `_policy-summary-agent/renewals-handoff.csv` (item `01CO7KXEVULXFHN6F355FJ2HM7J5NHDOEM`). Columns are those of `templates/renewal-register.csv` plus `source_file`. Fill them from the schedule only, copying figures exactly as printed; leave a field blank if the schedule doesn't state it. `renewal_action_date` is the expiry date less 60 days. `status` is the broker-check status, `open_flags` the RED and key AMBER flags in a few words, `source_file` the schedule path from `CAR CLIENTS/` (or the relevant category folder) onwards, `date_added` today. Every new schedule gets a row, including endorsements and renewals of a policy already listed (the renewals agent keeps the latest by inception date).
+     - Read the current file first and re-upload it whole with the new rows added at the end (`conflictBehavior: replace`). Never remove or change existing rows. If the file is missing, create it with the header row.
 
-5. **Save state.** Upload `processed.json` with `conflictBehavior: replace`. This is the only file the agent may ever replace.
+5. **Save state.** Upload `processed.json` and `renewals-handoff.csv` with `conflictBehavior: replace`. These are the only files the agent may ever replace.
 
 6. **Report. Every scheduled run (07:34, 11:34 and 15:34) ends with a report, every time, even when nothing is new.**
    - **Email the report** with `outlook_send_mail` from Megan@mdmrisks.com to exactly these two addresses: `megan@rosewoodib.co.za` and `admin@rosewoodib.co.za`. No cc, no bcc, no other recipients.
@@ -64,6 +66,7 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
    - Body, short, one line per policy, RED first: `HOLD: <client> <policy>: <key flag>` or `<client> <policy>: <status>, draft sent to admin`.
    - **07:34 and 11:34 runs:** list what was processed this run, or the single line `No new schedules`.
    - **15:34 run (daily summary):** start with `Daily check: CLIENT DATABASE checked 3 times today.` Then count today's entries in `processed.json` (processed_on = today) and list each one: client, policy, draft sent to admin, any RED flag. If there are none: `No new policies today.`
+   - Add one line: `Renewals handoff: X row(s) added for the monthly renewals report.`
    - If anything failed (connector, upload, send), say so plainly in the report.
    - **Finish the run with the same report as your final message**, so it reaches Megan as a phone notification. If any policy is HOLD, start it with `HOLD:`.
 
