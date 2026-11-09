@@ -1,6 +1,8 @@
-# Template: CAR Client Email
+# Template: CAR Client Email (tight version)
 
-Sections in **bold caps** are fixed. Keep the order. Leave out a section only if it truly has no content. This email goes into the Outlook draft ON ITS OWN: never add flags or internal notes to it.
+This email goes into the Outlook draft ON ITS OWN: never add flags or internal notes to it. The same content goes into the POLICY SUMMARY document.
+
+**Target: one page.** Short sentences. Only what the client needs to act on or remember. If it isn't specific to this policy or this client's work, cut it.
 
 ---
 
@@ -8,65 +10,48 @@ Sections in **bold caps** are fixed. Keep the order. Leave out a section only if
 
 Hi {client_first_name}
 
-{One or two sentences: why they are receiving this (new policy, renewal, endorsement) and that the full schedule and wording are attached.}
+{ONE sentence: why they're getting this (new policy, renewal or endorsement). Schedule and wording attached.}
 
 **AT A GLANCE**
 
 | | |
 |---|---|
-| Insured | {name_of_insured} |
-| Insurer | {insurer}, through {underwriting_manager} |
-| Policy number | {policy_number} |
-| Policy type | {Annual contractors policy / Specific contract policy / Once-off} |
-| Period of cover | {from} to {to} |
-| Renewal date | {anniversary_date} |
-| Total premium | {total_amount_due} {frequency}, incl. VAT, admin fee and SASRIA |
+| Policy | {policy_number}, {insurer} via {underwriting_manager} |
+| Type | {Annual / Specific contract} |
+| Cover period | {from} to {to} |
+| Premium | {amount} {frequency}, incl. VAT and SASRIA |
 
-**WHAT YOU NEED TO DO TO KEEP YOUR COVER VALID**
+**KEEP YOUR COVER VALID**
 
-{Numbered list. Every warranty and condition, in plain English, starting with the ones most likely to be breached on this client's site. Always include: claims notice period, premium payment rule.}
+{Maximum 5 numbered points. Only the warranties and conditions most likely to be breached on THIS client's sites, one line each. Always include the 30-day premium rule.}
 
-**WHAT YOU'RE COVERED FOR**
+**WHAT'S COVERED**
 
-*Contract Works* (physical loss or damage to the works)
-{Contract description, contract value or max contract limit, contract period, maintenance period, escalation.}
-
-*Extensions*
-| Extension | Limit |
+| Cover | Limit |
 |---|---|
-{rows}
+| Contract works (max any one contract / contract value) | {value} |
+| Public liability | {limit} |
+| {Up to 4 extensions that matter most for this client's work} | {limit} |
 
-*Public Liability* (injury or damage to third parties): {limit}
-| Extension | Limit |
-|---|---|
-{rows}
+*Not included:* {one line listing every "No" item}
 
-*Not included on your policy:* {list every "No" item in plain English}
-
-**WHAT YOU PAY IF YOU CLAIM (DEDUCTIBLES)**
+**WHAT YOU PAY IF YOU CLAIM**
 
 | Type of loss | You pay |
 |---|---|
-{rows}
+{Every deductible row, short labels. Add "The highest deductible applies if more than one fits." only if relevant.}
 
-{If more than one deductible could apply, add: "If more than one deductible applies to the same event, the highest one is used."}
-{If deductibles changed by endorsement, say so and give the date.}
+**KEY EXCLUSIONS**
 
-**WHAT'S NOT COVERED**
+{Maximum 5 bullets relevant to this client's work, one line each. Then one line: "Standard exclusions such as wear and tear, defective workmanship and pollution also apply. See the wording."}
 
-*Most relevant to your work:*
-{3 to 6 exclusions that matter for this contract.}
+**PLEASE CONFIRM**
 
-*Standard exclusions:*
-{Short list of the rest.}
+{Maximum 4 bullets: client-side data gaps or contract details only.}
 
-**PLEASE CHECK AND CONFIRM**
+**CLAIMS**
 
-{Client-facing data gaps only: missing addresses, contract values, contract periods, new contracts to note. Not internal flags.}
-
-**IF YOU NEED TO CLAIM**
-
-Call or email us first, before you speak to anyone else. You must notify the insurer in writing within {X} days. Do not admit liability or agree to pay anyone. Report theft or malicious damage to SAPS and get a case number. Keep photos and damaged items.
+Contact us first. The insurer must be notified in writing within {X} days. Don't admit liability, and report theft to SAPS.
 
 Any questions, I'm a call away.
 
@@ -75,4 +60,4 @@ Rosewood Insurance Brokers | FSP 50431
 {phone} | {email}
 
 ---
-*This summary is a guide to help you understand your cover. It does not replace or change your policy. The policy schedule, wording and endorsements are the legal contract, and if anything here differs from them, the policy documents apply. Please read them and let us know if anything is incorrect or if your work has changed.*
+*This summary is a guide only and does not change your policy. If anything here differs from the schedule, wording or endorsements, the policy documents apply.*

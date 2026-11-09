@@ -21,7 +21,7 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
 2. **Load state.** Read `_policy-summary-agent/processed.json`. It's a list of `{ "itemId", "name", "processed_on", "status", "draft_id" }`. If the file is missing, treat it as empty.
 
 3. **Find new schedules.** Run `sharepoint_search` with query `ETU OR CAR OR schedule`, `fileType: pdf`, `folderName: CLIENT DATABASE` and `afterDateTime` = 10 days ago, and page through every result. Keep a file only if **all** of these are true:
-   - its path is under `CLIENT DATABASE/` but not under `CLIENT DATABASE - Copy/`, `_renewals-agent/`, `_policy-summary-agent/`, `QUOTE`, `QUOTES` or `LEADS`
+   - its path is under `CLIENT DATABASE/` but not under `CLIENT DATABASE - Copy/`, `_renewals-agent/`, `_policy-summary-agent/`, `QUOTE`, `QUOTES`, `LEADS` or `AI POLICY SUMMARY`
    - its name looks like a policy schedule: it contains a policy number pattern (`ETU\d{6}`, `CAR\d{7}`, `ACE ENG\d+`) or the word "schedule"
    - its name doesn't contain "wording", "SASRIA", "coupon", "debit order", "invoice", "quote" or "proposal"
    - its itemId isn't already in `processed.json`
@@ -34,8 +34,9 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
    - c. Look up the client's row in `CLIENT DATABASE ORGANISED.xlsx` by policy number, and check it for conflicts with the schedule (status, dates, insurer). This file is **read only**: never write to it.
    - d. List the sibling folders of the client folder, such as `THEFT CLAIM`. An open claim folder must appear as a flag in the broker check, because it's relevant to warranties.
    - e. Follow `agent/system-prompt.md` exactly to produce the **broker check**, the **client email** and **Part A of the policy record**. Today's date is from step 1.
-   - f. **Build TWO Word documents** with `python3 agent/md_to_docx.py in.md out.docx "<subtitle>"` and upload each with `sharepoint_upload_file` (contentBase64, `expectedBytes` = the printed size) into the **same folder as the schedule**:
-     - `POLICY SUMMARY - {policy no} - {YYYY-MM-DD}.docx` (subtitle "Policy Summary"). This is client-facing: the client email content, then a **POLICY DOCUMENTS** section that links to the schedule PDF and the wording PDF in OneDrive, in Markdown link format `[file name](https://mdmrisk-my.sharepoint.com/personal/megan_mdmrisks_com/Documents/<url-encoded path>)`. **No flags in this document.**
+   - f-i. **Find or create the client's AI POLICY SUMMARY folder.** The client folder is the folder directly under the category folder, for example `CLIENT DATABASE/CAR CLIENTS/EXCELSUS BUILD/`. Use `sharepoint_folder_search` for `AI POLICY SUMMARY` and keep only a result whose path is `<client folder>/AI POLICY SUMMARY`. If there isn't one, create it with `sharepoint_create_folder` (parent = the client folder's item id). Do this for every new client or policy. Never put AI documents in the year or policy subfolders. Exclude `AI POLICY SUMMARY` folders when searching for new schedules.
+   - f. **Build TWO Word documents** with `python3 agent/md_to_docx.py in.md out.docx "<subtitle>"` and upload each with `sharepoint_upload_file` (contentBase64, `expectedBytes` = the printed size) into the client's **AI POLICY SUMMARY** folder (see step 4f-i):
+     - `POLICY SUMMARY - {policy no} - {YYYY-MM-DD}.docx` (subtitle "Policy Summary"). Follow the **tight** template in `templates/car-client-email.md`: one page, maximum 5 points per list. This is client-facing: the client email content, then a **POLICY DOCUMENTS** section that links to the schedule PDF and the wording PDF in OneDrive, in Markdown link format `[file name](https://mdmrisk-my.sharepoint.com/personal/megan_mdmrisks_com/Documents/<url-encoded path>)`. **No flags in this document.**
      - `BROKER CHECK - {policy no} - {YYYY-MM-DD}.docx` (subtitle "Broker Check and Record of Advice (internal)"). This is internal: the status line, the flag table (RED/AMBER/GREEN with sources), the wording check, Part A policy details, the same document links, and a blank Part B record of advice plus approval table.
      - Use `conflictBehavior: rename`. The base64 must be copied exactly. If an upload is refused for a size mismatch, rebuild and retry once.
    - g. **Create ONE Outlook draft** (`outlook_create_draft`, bodyType html, no recipients) containing **only the client email**: no flags, no broker check, no internal notes.
@@ -46,7 +47,9 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
 
 5. **Save state.** Upload `processed.json` with `conflictBehavior: replace`. This is the only file the agent may ever replace.
 
-6. **Report (this is how Megan and the admin know a draft is ready).**
+6. **Report (this is how Megan and the admin know a draft is ready).** The run finishes with a phone notification.
+   - **Runs at 07:34 and 11:34:** if new drafts were created, list them, with RED clients first, as `HOLD: <client> <policy>: <key flag>`. If nothing was new, reply only `No new schedules`.
+   - **The 15:34 run (daily summary): always report.** Start with `Daily check: CLIENT DATABASE checked 3 times today.` Then count today's entries in `processed.json` (processed_on = today) and list each one: client, policy, draft ready, any RED flag. If there are none: `No new policies today.`
    - If anything was processed, finish with a short summary: client, policy, status and the key flag, one line each.
    - If nothing new was found, finish with "No new schedules" and do nothing else.
    - **Never send email, never contact clients or insurers.**
