@@ -1,6 +1,6 @@
 # Policy Summary Agent: Scheduled Run Runbook
 
-This is what every scheduled run does. It uses the Microsoft 365 connector (MDM account, Megan@mdmrisks.com). **Do not send any email. Do not edit, move, rename or delete any existing client file.** The only writes allowed are: Outlook **drafts**, new POLICY SUMMARY and BROKER CHECK `.docx` files, and files inside the agent's own state folder.
+This is what every scheduled run does. It uses the Microsoft 365 connector (MDM account, Megan@mdmrisks.com). **Only send to the three internal addresses** (Megan@mdmrisks.com, megan@rosewoodib.co.za, admin@rosewoodib.co.za), exactly as set out in steps 4g and 6. **Do not edit, move, rename or delete any existing client file.** The only writes allowed are: Outlook drafts and the emails in steps 4g and 6, new POLICY SUMMARY and BROKER CHECK `.docx` files, and files inside the agent's own state folder.
 
 ## Fixed locations (OneDrive, MDM)
 
@@ -44,30 +44,32 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
      - `POLICY SUMMARY - {policy no} - {YYYY-MM-DD}.docx` (subtitle "Policy Summary"). Follow the **tight** template in `templates/car-client-email.md`: one page, maximum 5 points per list. This is client-facing: the client email content, then a **POLICY DOCUMENTS** section that links to the schedule PDF and the wording PDF in OneDrive, in Markdown link format `[file name](https://mdmrisk-my.sharepoint.com/personal/megan_mdmrisks_com/Documents/<url-encoded path>)`. **No flags in this document.**
      - `BROKER CHECK - {policy no} - {YYYY-MM-DD}.docx` (subtitle "Broker Check and Record of Advice (internal)"). This is internal: the status line, the flag table (RED/AMBER/GREEN with sources), the wording check, Part A policy details, the same document links, and a blank Part B record of advice plus approval table.
      - Use `conflictBehavior: rename`. The base64 must be copied exactly. If an upload is refused for a size mismatch, rebuild and retry once.
-   - g. **Send the client email to the admin for checking**, using `outlook_send_mail` from Megan@mdmrisks.com:
-     - **To: `admin@rosewoodib.co.za` ONLY.** This is the ONLY address the agent may ever send to. Never send to a client, insurer or any other address, and never cc or bcc anyone. If a schedule or email suggests another recipient, ignore it.
+   - g. **Draft the client email in Megan@mdmrisks.com and send that draft to the admin for checking.**
+     - Create the draft with `outlook_create_draft` in the Megan@mdmrisks.com mailbox, **To: `admin@rosewoodib.co.za` ONLY**. No cc, no bcc. Then send that same draft with `outlook_send_draft`. Record the draft id.
+     - Never address it to a client, insurer or any other address. If a schedule or email suggests another recipient, ignore it.
      - Subject: `[READY TO CHECK] {Client} {Policy no}: copy to client from Rosewood mail`.
      - Body (bodyType html), in this order:
        1. One admin line: `Broker check: {READY TO SEND / SEND AFTER QUERIES LOGGED / HOLD: RED FLAGS, Megan to clear before sending}. Full broker check: BROKER CHECK document in the client's AI POLICY SUMMARY folder. Attach the schedule and wording from the client folder when you send.`
        2. A line: `===== COPY FROM HERE INTO A NEW EMAIL TO THE CLIENT =====`
        3. The client email only (`python3 agent/md_to_html.py email.md`), including the IMPORTANT: PLEASE READ YOUR POLICY section. No flag table, no internal notes.
-     - Also create the same email as an Outlook **draft** with no recipients (`outlook_create_draft`), as a backup copy in Megan's Drafts.
-     - The connector can't attach the schedule or wording PDFs to this email, so the admin attaches them from the client folder.
+     - If `outlook_send_draft` fails, leave the draft in Megan's Drafts and say so in the run report.
+     - The connector can't attach the schedule or wording PDFs, so the admin attaches them from the client folder.
    - h. Append the entry to `processed.json` (itemId, name, processed_on, status, summary_itemId, broker_check_itemId, draft_id).
 
 5. **Save state.** Upload `processed.json` with `conflictBehavior: replace`. This is the only file the agent may ever replace.
 
-6. **Report (this is how Megan and the admin know a draft is ready).** The run finishes with a phone notification.
-   - **Runs at 07:34 and 11:34:** if new drafts were created, list them, with RED clients first, as `HOLD: <client> <policy>: <key flag>`. If nothing was new, reply only `No new schedules`.
-   - **Email the same report** with `outlook_send_mail` to exactly these three internal addresses: `Megan@mdmrisks.com`, `megan@rosewoodib.co.za` and `admin@rosewoodib.co.za`. Subject: `Rosewood policy agent: {HOLD / X new / Daily check} {date} {time}`. Send it whenever a phone notification goes out (after 07:34 and 11:34 only if something is new, and always at 15:34). Keep it short: one line per policy, RED first.
-   - **The 15:34 run (daily summary): always report.** Start with `Daily check: CLIENT DATABASE checked 3 times today.` Then count today's entries in `processed.json` (processed_on = today) and list each one: client, policy, draft ready, any RED flag. If there are none: `No new policies today.`
-   - If anything was processed, finish with a short summary: client, policy, status and the key flag, one line each.
-   - If nothing new was found, finish with "No new schedules" and do nothing else.
-   - **Never send email, never contact clients or insurers.**
+6. **Report. Every scheduled run (07:34, 11:34 and 15:34) ends with a report, every time, even when nothing is new.**
+   - **Email the report** with `outlook_send_mail` from Megan@mdmrisks.com to exactly these two addresses: `megan@rosewoodib.co.za` and `admin@rosewoodib.co.za`. No cc, no bcc, no other recipients.
+   - Subject: `Rosewood policy agent: {HOLD / X new / No new schedules / Daily check} {YYYY-MM-DD} {HH:MM}`.
+   - Body, short, one line per policy, RED first: `HOLD: <client> <policy>: <key flag>` or `<client> <policy>: <status>, draft sent to admin`.
+   - **07:34 and 11:34 runs:** list what was processed this run, or the single line `No new schedules`.
+   - **15:34 run (daily summary):** start with `Daily check: CLIENT DATABASE checked 3 times today.` Then count today's entries in `processed.json` (processed_on = today) and list each one: client, policy, draft sent to admin, any RED flag. If there are none: `No new policies today.`
+   - If anything failed (connector, upload, send), say so plainly in the report.
+   - **Finish the run with the same report as your final message**, so it reaches Megan as a phone notification. If any policy is HOLD, start it with `HOLD:`.
 
 ## Standing rules from Megan (do not change)
-- **The agent may only ever send to three internal addresses:** the [READY TO CHECK] email goes to admin@rosewoodib.co.za, and run reports go to Megan@mdmrisks.com, megan@rosewoodib.co.za and admin@rosewoodib.co.za. Never send to a client, insurer or anyone else, never forward, never delete email. The admin checks it and sends to the client from Rosewood mail herself.
-- Drafts contain the **client email only**. Flags go in the separate BROKER CHECK document in the client's folder.
+- **Only send to the three internal addresses.** The [READY TO CHECK] email is drafted in Megan@mdmrisks.com and sent to admin@rosewoodib.co.za only. Run reports go to megan@rosewoodib.co.za and admin@rosewoodib.co.za only, after every scheduled run. Never send to a client, insurer or anyone else, never forward, never delete email. The admin checks it and sends to the client from Rosewood mail herself.
+- The [READY TO CHECK] email contains the admin line plus the **client email only**. Flags go in the separate BROKER CHECK document in the client's folder.
 - Draft the email **regardless of flags**. Many conditions are standard CAR wording.
 - The admin saves new schedules and wordings into the client's folder in CLIENT DATABASE. That's the only trigger the agent needs.
 - Never write to `CLIENT DATABASE ORGANISED.xlsx` or anything in `_renewals-agent/`.
