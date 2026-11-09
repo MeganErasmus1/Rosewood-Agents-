@@ -8,7 +8,7 @@ This is what every scheduled run does. It uses the Microsoft 365 connector (MDM 
 |---|---|
 | driveId | `b!7vzr3uRy1k65KuSVa9BOZFDXW55shcdHi9qqW2LLvkPSVZnnH9wsTJm5WOe1Oaaa` |
 | Client database root | `4. ROSEWOOD INSURANCE BROKERS (PTY) LTD/CLIENT DATABASE` (item `01CO7KXES5JTQ45J5ZNJHKAFOW3F3MKJY5`) |
-| Agent state folder | `CLIENT DATABASE/_policy-summary-agent/` (contains `processed.json`) |
+| Agent state folder | `CLIENT DATABASE/_policy-summary-agent/` (item `01CO7KXESSBZVZ4D72JJFLKYXIN4GKGAEF`, contains `processed.json`) |
 | Client list (read only) | `CLIENT DATABASE/CLIENT DATABASE ORGANISED.xlsx` |
 | Renewals agent (do not touch) | `CLIENT DATABASE/_renewals-agent/` |
 
@@ -35,7 +35,8 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
    - d. List the sibling folders of the client folder, such as `THEFT CLAIM`. An open claim folder must appear as a flag in the broker check, because it's relevant to warranties.
    - e. Follow `agent/system-prompt.md` exactly to produce the **broker check**, the **client email** and **Part A of the policy record**. Today's date is from step 1.
    - f. **Build the summary document.** Write the policy record (broker check + Part A + client email as sent + blank Part B) to a local `.md` file. Run `python3 agent/md_to_docx.py in.md out.docx`, then upload it with `sharepoint_upload_file` (contentBase64, `expectedBytes` = the printed size) into the **same folder as the schedule**. Name it `POLICY SUMMARY - {policy no} - {YYYY-MM-DD}.docx` and use `conflictBehavior: rename`.
-   - g. **Create one Outlook draft** (`outlook_create_draft`, bodyType html, no recipients):
+     The base64 must be copied exactly. If the upload is refused for a size mismatch, rebuild and retry once, then fall back to uploading the same content as `.html` (from `agent/md_to_html.py`) via `content`.
+   - g. **Create one Outlook draft** (`outlook_create_draft`, bodyType html, no recipients). Build the body with `python3 agent/md_to_html.py draft.md`, which outputs only tags the Outlook allowlist accepts. End every draft with: "Policy summary saved to the client folder in OneDrive. Add this policy to CLIENT DATABASE ORGANISED.xlsx if it is not there yet."
      - If the status is READY or SEND AFTER QUERIES:
        - Subject: `[READY] {Client} {Policy no}: copy to Rosewood mail` or `[QUERIES] ...`
        - Body: a short broker-check box at the top, a line `===== COPY FROM HERE INTO ROSEWOOD EMAIL =====`, then the client email.
