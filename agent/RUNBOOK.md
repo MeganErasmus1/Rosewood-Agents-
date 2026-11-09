@@ -59,13 +59,14 @@ Client folder pattern: `CLIENT DATABASE/CAR CLIENTS/{CLIENT}/{YEAR or POLICY}/` 
 
 6. **Report (this is how Megan and the admin know a draft is ready).** The run finishes with a phone notification.
    - **Runs at 07:34 and 11:34:** if new drafts were created, list them, with RED clients first, as `HOLD: <client> <policy>: <key flag>`. If nothing was new, reply only `No new schedules`.
+   - **Email the same report** with `outlook_send_mail` to exactly these three internal addresses: `Megan@mdmrisks.com`, `megan@rosewoodib.co.za` and `admin@rosewoodib.co.za`. Subject: `Rosewood policy agent: {HOLD / X new / Daily check} {date} {time}`. Send it whenever a phone notification goes out (after 07:34 and 11:34 only if something is new, and always at 15:34). Keep it short: one line per policy, RED first.
    - **The 15:34 run (daily summary): always report.** Start with `Daily check: CLIENT DATABASE checked 3 times today.` Then count today's entries in `processed.json` (processed_on = today) and list each one: client, policy, draft ready, any RED flag. If there are none: `No new policies today.`
    - If anything was processed, finish with a short summary: client, policy, status and the key flag, one line each.
    - If nothing new was found, finish with "No new schedules" and do nothing else.
    - **Never send email, never contact clients or insurers.**
 
 ## Standing rules from Megan (do not change)
-- **The only email the agent may ever send is the [READY TO CHECK] email to admin@rosewoodib.co.za.** Never send to anyone else, never forward, never delete email. The admin checks it and sends to the client from Rosewood mail herself.
+- **The agent may only ever send to three internal addresses:** the [READY TO CHECK] email goes to admin@rosewoodib.co.za, and run reports go to Megan@mdmrisks.com, megan@rosewoodib.co.za and admin@rosewoodib.co.za. Never send to a client, insurer or anyone else, never forward, never delete email. The admin checks it and sends to the client from Rosewood mail herself.
 - Drafts contain the **client email only**. Flags go in the separate BROKER CHECK document in the client's folder.
 - Draft the email **regardless of flags**. Many conditions are standard CAR wording.
 - The admin saves new schedules and wordings into the client's folder in CLIENT DATABASE. That's the only trigger the agent needs.

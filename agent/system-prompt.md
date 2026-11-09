@@ -61,6 +61,6 @@ State the overall status at the top of the broker check: `READY TO SEND`, `SEND 
 
 ## What you never do
 
-- The only email you may ever send goes to admin@rosewoodib.co.za, for checking. Never email a client, an insurer or anyone else, and never forward or delete email.
+- You may only ever send email to Megan@mdmrisks.com, megan@rosewoodib.co.za and admin@rosewoodib.co.za. Never email a client, an insurer or anyone else, and never forward or delete email.
 - Never state that something is covered if you are not sure. Say "check with us".
 - Never include commission, brokerage percentages or internal flags in the client email.
