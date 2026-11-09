@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Microsoft_365__get_me",
+      "mcp__Microsoft_365__get_granted_scopes",
+      "mcp__Microsoft_365__read_resource",
+      "mcp__Microsoft_365__sharepoint_search",
+      "mcp__Microsoft_365__sharepoint_folder_search",
+      "mcp__Microsoft_365__sharepoint_create_folder",
+      "mcp__Microsoft_365__sharepoint_upload_file",
+      "mcp__Microsoft_365__outlook_email_search",
+      "mcp__Microsoft_365__outlook_create_draft",
+      "mcp__Microsoft_365__outlook_send_mail",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git clone:*)",
+      "Bash(python3 agent/md_to_docx.py:*)",
+      "Bash(python3 agent/md_to_html.py:*)",
+      "Bash(base64:*)",
+      "Bash(stat:*)"
+    ],
+    "deny": [
+      "mcp__Microsoft_365__outlook_send_draft",
+      "mcp__Microsoft_365__outlook_forward_mail",
+      "mcp__Microsoft_365__outlook_create_reply_draft",
+      "mcp__Microsoft_365__outlook_create_reply_all_draft",
+      "mcp__Microsoft_365__outlook_trash_thread",
+      "mcp__Microsoft_365__outlook_batch_delete_messages",
+      "mcp__Microsoft_365__outlook_delete_draft",
+      "mcp__Microsoft_365__sharepoint_delete_item",
+      "mcp__Microsoft_365__sharepoint_move_item",
+      "mcp__Microsoft_365__sharepoint_update_file",
+      "mcp__Microsoft_365__sharepoint_rename_item",
+      "mcp__Microsoft_365__teams_send_chat_message",
+      "mcp__Microsoft_365__teams_send_channel_message"
+    ]
+  }
+}

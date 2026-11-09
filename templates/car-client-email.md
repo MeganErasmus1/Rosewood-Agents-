@@ -49,6 +49,10 @@ Hi {client_first_name}
 
 {Maximum 4 bullets: client-side data gaps or contract details only.}
 
+**IMPORTANT: PLEASE READ YOUR POLICY**
+
+This is a brief summary to help you find your way around your cover. It does not list every term, condition or exclusion. It is your responsibility to read the full policy schedule and wording and make sure the cover matches your contracts and your needs. If anything doesn't fit, or your work changes, tell us straight away so we can fix it before you need to claim.
+
 **CLAIMS**
 
 Contact us first. The insurer must be notified in writing within {X} days. Don't admit liability, and report theft to SAPS.
